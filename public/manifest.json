@@ -1,0 +1,22 @@
+{
+    "name": "2025 Progress Tracker",
+    "short_name": "2025 Progress",
+    "description": "Track 2025 as it happens with our real-time year progress tracker",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#111827",
+    "theme_color": "#1F2937",
+    "orientation": "portrait-primary",
+    "icons": [
+      {
+        "src": "/icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

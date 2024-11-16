@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+    <!-- Dark Background -->
+    <rect width="1200" height="630" fill="#111827"/>
+    
+    <!-- Decorative Background Grid -->
+    <path d="M0 0 h1200 v630 h-1200 Z" fill="#1F2937" fill-opacity="0.3"/>
+    
+    <!-- Gradient Background Accent -->
+    <defs>
+      <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#10B981"/>
+        <stop offset="100%" style="stop-color:#06B6D4"/>
+      </linearGradient>
+      
+      <!-- Progress Bar Gradient -->
+      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" style="stop-color:#10B981"/>
+        <stop offset="100%" style="stop-color:#06B6D4"/>
+      </linearGradient>
+    </defs>
+    
+    <!-- Main Title -->
+    <text x="600" y="200" font-family="Arial, sans-serif" font-size="92" font-weight="bold" fill="#ffffff" text-anchor="middle">2025 Progress</text>
+    
+    <!-- Large Progress Bar -->
+    <rect x="250" y="280" width="700" height="40" rx="20" fill="#1F2937"/>
+    <rect x="250" y="280" width="350" height="40" rx="20" fill="url(#progressGradient)"/>
+    
+    <!-- Percentage Display -->
+    <text x="600" y="380" font-family="monospace" font-size="64" font-weight="bold" fill="url(#brandGradient)" text-anchor="middle">50.000000%</text>
+    
+    <!-- Descriptive Text -->
+    <text x="600" y="460" font-family="Arial, sans-serif" font-size="36" fill="#9CA3AF" text-anchor="middle">Real-time Year Progress Tracker</text>
+    
+    <!-- Website URL -->
+    <text x="600" y="560" font-family="Arial, sans-serif" font-size="32" fill="#6B7280" text-anchor="middle">2025progress.com</text>
+  </svg>
