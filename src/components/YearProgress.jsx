@@ -98,7 +98,7 @@ const YearProgress = () => {
       >
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-            2025 Progress
+            2024 Progress
           </h1>
           <div className="flex gap-2">
             <button 
