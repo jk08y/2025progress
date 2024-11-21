@@ -184,7 +184,7 @@ const YearProgress = () => {
         </div>
 
         <div className={`text-center text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Counting down every second of 2025
+          Counting down every second of 2024
         </div>
       </div>
     </div>
