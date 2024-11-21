@@ -27,8 +27,8 @@ const YearProgress = () => {
 
     const progressInterval = setInterval(() => {
       const now = new Date();
-      const start = new Date('2025-01-01T00:00:00');
-      const end = new Date('2026-01-01T00:00:00');
+      const start = new Date('2024-01-01T00:00:00');
+      const end = new Date('2025-01-01T00:00:00');
 
       const total = end - start;
       const current = now - start;
