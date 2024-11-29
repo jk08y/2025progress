@@ -1,131 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Share2, RefreshCcw } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Moon, Sun, Share2, RefreshCcw, Calendar, Clock, Timer, Sparkles } from 'lucide-react';
 
-const YearProgress = () => {
-  const [progress, setProgress] = useState(0);
-  const [daysLeft, setDaysLeft] = useState(0);
-  const [daysPassed, setDaysPassed] = useState(0);
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Initialize theme based on user's system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-  const [isHovering, setIsHovering] = useState(false);
+// Custom hook for theme management
+const useTheme = () => {
+  const [isDarkMode, setIsDarkMode] = useState(() => 
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   useEffect(() => {
-    // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => setIsDarkMode(e.matches);
-    mediaQuery.addListener(handleChange);
-    return () => mediaQuery.removeListener(handleChange);
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+    document.documentElement.classList.toggle('dark');
+  }, []);
 
-    const progressInterval = setInterval(() => {
+  return { isDarkMode, toggleTheme };
+};
+
+// Custom hook for time and progress tracking
+const useYearProgress = () => {
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [stats, setStats] = useState({
+    daysPassed: 0,
+    daysLeft: 0,
+    hoursLeft: 0,
+    minutesLeft: 0,
+    secondsLeft: 0,
+    percentageComplete: 0
+  });
+
+  useEffect(() => {
+    const calculateProgress = () => {
       const now = new Date();
-      const start = new Date('2024-01-01T00:00:00');
-      const end = new Date('2025-01-01T00:00:00');
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear() + 1, 0, 1);
 
       const total = end - start;
       const current = now - start;
       const percentage = (current / total) * 100;
 
       const oneDay = 24 * 60 * 60 * 1000;
-      const passedDays = Math.floor((now - start) / oneDay);
-      const leftDays = Math.floor((end - now) / oneDay);
+      const daysPassed = Math.floor((now - start) / oneDay);
+      const daysLeft = Math.floor((end - now) / oneDay);
+
+      const hoursDiff = end - now;
+      const hoursLeft = Math.floor(hoursDiff / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((hoursDiff % (1000 * 60 * 60)) / (1000 * 60));
+      const secondsLeft = Math.floor((hoursDiff % (1000 * 60)) / 1000);
 
       setProgress(Math.max(0, Math.min(100, percentage)));
-      setDaysLeft(leftDays);
-      setDaysPassed(passedDays);
+      setStats({
+        daysPassed,
+        daysLeft,
+        hoursLeft,
+        minutesLeft,
+        secondsLeft,
+        percentageComplete: percentage
+      });
+    };
+
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+      calculateProgress();
     }, 1000);
 
-    return () => {
-      clearInterval(timeInterval);
-      clearInterval(progressInterval);
-    };
+    return () => clearInterval(timeInterval);
   }, []);
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
+  return { progress, currentTime, stats };
+};
+
+const YearProgress = () => {
+  const { isDarkMode, toggleTheme } = useTheme();
+  const { progress, currentTime, stats } = useYearProgress();
+  const [isHovering, setIsHovering] = useState(false);
+
+  // Memoized formatting functions
+  const formatDate = useMemo(() => 
+    currentTime.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    });
-  };
+    }), 
+    [currentTime]
+  );
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('en-US', {
+  const formatTime = useMemo(() => 
+    currentTime.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    });
-  };
+    }), 
+    [currentTime]
+  );
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const handleShare = async () => {
+  // Share functionality with fallback
+  const handleShare = useCallback(async () => {
     try {
       const shareData = {
-        title: '2025 Progress Tracker',
-        text: `Current Year Progress: ${progress.toFixed(2)}%\nDays Passed: ${daysPassed}\nDays Left: ${daysLeft}`,
+        title: '2024 Progress Tracker',
+        text: `Year Progress: ${progress.toFixed(2)}%\nDays Passed: ${stats.daysPassed}\nDays Left: ${stats.daysLeft}`,
         url: window.location.href
       };
-      await navigator.share(shareData);
+      
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback for browsers without native share
+        await navigator.clipboard.writeText(shareData.text);
+        alert('Progress copied to clipboard!');
+      }
     } catch (err) {
-      console.log('Share failed:', err);
+      console.error('Sharing failed:', err);
+      alert('Sharing or copying failed');
     }
-  };
+  }, [progress, stats]);
 
-  const refreshPage = () => {
+  // Refresh page with better UX
+  const refreshPage = useCallback(() => {
     window.location.reload();
-  };
+  }, []);
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-4 transition-colors duration-300 
+      ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div 
-        className={`w-full max-w-md rounded-lg p-6 space-y-6 transition-all duration-300 transform hover:scale-102 ${
-          isDarkMode ? 'bg-gray-800' : 'bg-white shadow-lg'
-        }`}
+        className={`w-full max-w-md rounded-2xl p-6 space-y-6 transition-all duration-300 transform 
+          ${isDarkMode 
+            ? 'bg-gray-800 shadow-2xl border border-gray-700' 
+            : 'bg-white shadow-2xl border border-gray-200'
+          } hover:scale-[1.02]`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
+        {/* Header with Title and Actions */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
             2024 Progress
           </h1>
+          
           <div className="flex gap-2">
+            {/* Share Button */}
             <button 
               onClick={handleShare}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-full transition-all group ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-400 hover:text-emerald-400' 
                   : 'hover:bg-gray-200 text-gray-600 hover:text-emerald-600'
               }`}
               title="Share Progress"
             >
-              <Share2 size={20} />
+              <Share2 size={20} className="group-hover:animate-pulse" />
             </button>
+            
+            {/* Refresh Button */}
             <button 
               onClick={refreshPage}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-full transition-all group ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-400 hover:text-emerald-400' 
                   : 'hover:bg-gray-200 text-gray-600 hover:text-emerald-600'
               }`}
               title="Refresh Data"
             >
-              <RefreshCcw size={20} />
+              <RefreshCcw size={20} className="group-hover:animate-spin" />
             </button>
+            
+            {/* Theme Toggle */}
             <button 
               onClick={toggleTheme}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-full transition-all group ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-emerald-400' 
                   : 'hover:bg-gray-200 text-emerald-600'
@@ -133,34 +185,37 @@ const YearProgress = () => {
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDarkMode ? (
-                <Sun size={20} />
+                <Sun size={20} className="group-hover:rotate-180 transition-transform" />
               ) : (
-                <Moon size={20} />
+                <Moon size={20} className="group-hover:rotate-180 transition-transform" />
               )}
             </button>
           </div>
         </div>
 
+        {/* Date and Time Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className={`rounded-lg p-4 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-            <div className={`text-sm mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {formatDate(currentTime)}
+          <div className={`rounded-lg p-4 flex items-center gap-2 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            <Calendar size={20} className="text-emerald-500" />
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {formatDate}
             </div>
           </div>
-          <div className={`rounded-lg p-4 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
-            <div className={`text-sm mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {formatTime(currentTime)}
+          <div className={`rounded-lg p-4 flex items-center gap-2 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            <Clock size={20} className="text-cyan-500" />
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {formatTime}
             </div>
           </div>
         </div>
 
+        {/* Progress Bar */}
         <div className="relative pt-4">
-          <div className={`overflow-hidden h-3 text-xs flex rounded-lg transition-colors ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+          <div className={`overflow-hidden h-4 rounded-full transition-colors ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
             <div
               style={{ width: `${progress}%` }}
-              className={`animate-pulse shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-500 ${
-                isHovering ? 'animate-pulse' : ''
-              }`}
+              className={`h-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-500 
+                ${isHovering ? 'animate-pulse' : ''}`}
             />
           </div>
           <div className="text-center mt-4 mb-2">
@@ -172,19 +227,27 @@ const YearProgress = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className={`rounded-lg p-4 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+        {/* Detailed Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          <div className={`rounded-lg p-4 flex flex-col items-center transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            <Timer size={24} className="text-emerald-500 mb-2" />
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Days Passed</div>
-            <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{daysPassed}</div>
+            <div className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.daysPassed}</div>
           </div>
-          <div className={`rounded-lg p-4 transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+          <div className={`rounded-lg p-4 flex flex-col items-center transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            <Sparkles size={24} className="text-cyan-500 mb-2" />
             <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Days Left</div>
-            <div className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{daysLeft}</div>
+            <div className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.daysLeft}</div>
+          </div>
+          <div className={`rounded-lg p-4 flex flex-col items-center transition-colors ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            <Clock size={24} className="text-purple-500 mb-2" />
+            <div className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Hrs Left</div>
+            <div className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{stats.hoursLeft}</div>
           </div>
         </div>
 
         <div className={`text-center text-sm transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-          Counting down every second of 2024
+          Capturing every moment of 2024 ✨
         </div>
       </div>
     </div>
