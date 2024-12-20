@@ -2,7 +2,7 @@
 
 A beautiful, reactive web application that shows the real-time progress of the year 2025 with a modern, minimalist design. Features both dark and light modes with smooth transitions.
 
-![2025 Progress Tracker](https://raw.githubusercontent.com/jk08y/2025progress/refs/heads/main/public/Screenshot%20from%202024-11-17%2010-25-53.png)
+![yearprogress Progress Tracker](https://raw.githubusercontent.com/jk08y/2025progress/refs/heads/main/public/Screenshot%20from%202024-11-17%2010-25-53.png)
 
 ## ✨ Features
 
@@ -41,12 +41,12 @@ A beautiful, reactive web application that shows the real-time progress of the y
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jk08y/2025progress.git
+git clone https://github.com/jk08y/yearprogress.git
 ```
 
 2. Install dependencies:
 ```bash
-cd 2025progress
+cd yearprogress
 npm install
 ```
 
@@ -100,7 +100,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📊 Live Demo
 
-Check out the live demo: [2025 Progress Tracker](https://2025progress.vercel.app/)
+Check out the live demo: [yearprogress Tracker](https://2025progress.vercel.app/)
 
 ---
 
